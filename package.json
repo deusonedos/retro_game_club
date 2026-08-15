@@ -1,0 +1,23 @@
+{
+  "name": "retro-game-club",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "rm -rf .tmp-test && esbuild src/games/bubble-blast/grid.ts src/api/config.ts --outbase=src --outdir=.tmp-test --format=esm && node scripts/grid.test.mjs && node scripts/time.test.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}
