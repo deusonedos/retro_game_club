@@ -80,8 +80,15 @@ async function getSession(): Promise<Session> {
   return pending;
 }
 
+let retried = false;
+
 /** Вызов функции в базе. Идентификатор игрока сервер берёт из токена. */
-async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise<T> {
+async function rpc<T>(
+  name: string,
+  args: Record<string, unknown> = {},
+  isRetry = false,
+): Promise<T> {
+  void isRetry;
   const { token } = await getSession();
 
   const res = await fetch(`${RPC_ENDPOINT}/${name}`, {
@@ -94,21 +101,17 @@ async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise
     body: JSON.stringify(args),
   });
 
-  if (res.status === 401) {
-    // Токен протух между проверкой и запросом — обмениваем и повторяем один раз.
+  if (res.status === 401 && !retried) {
+    // Токен мог протухнуть между проверкой и запросом. Пробуем ровно один
+    // раз: если дело не в сроке, а в неверном секрете подписи, повторять
+    // бессмысленно — получим ту же 401 и зациклимся.
     session = null;
-    const retryToken = (await getSession()).token;
-    const retry = await fetch(`${RPC_ENDPOINT}/${name}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_PUBLISHABLE_KEY,
-        Authorization: `Bearer ${retryToken}`,
-      },
-      body: JSON.stringify(args),
-    });
-    if (!retry.ok) throw new ApiError(await errorText(retry), retry.status);
-    return retry.json();
+    retried = true;
+    try {
+      return await rpc<T>(name, args, true);
+    } finally {
+      retried = false;
+    }
   }
 
   if (!res.ok) throw new ApiError(await errorText(res), res.status);
@@ -117,7 +120,12 @@ async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise
 
 async function errorText(res: Response): Promise<string> {
   const body = await res.json().catch(() => null);
-  return body?.message ?? body?.error ?? `ошибка ${res.status}`;
+  const msg = body?.message ?? body?.error ?? body?.hint;
+  // Код 42501 приходит от Postgres и означает нехватку прав, а не плохую
+  // подпись — Supabase отдаёт его тоже под статусом 401, и без этой
+  // подсказки две совершенно разные поломки выглядят одинаково.
+  if (body?.code === '42501') return `нет прав на вызов (${msg ?? '42501'})`;
+  return msg ?? `ошибка ${res.status}`;
 }
 
 /** Пустой раунд после списанной попытки: сервер ответил «попыток нет». */

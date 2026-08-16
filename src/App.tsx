@@ -14,7 +14,7 @@ import { useBackButtonHandle } from './telegram/webapp';
 type Overlay = { kind: 'game'; gameId: string } | { kind: 'admin' } | null;
 
 function Shell() {
-  const { loading, refresh } = useAppState();
+  const { loading, fatal, refresh } = useAppState();
   const [tab, setTab] = useState<Tab>('games');
   const [overlay, setOverlay] = useState<Overlay>(null);
   const backButton = useBackButtonHandle();
@@ -31,6 +31,18 @@ function Shell() {
         RETRO
         <br />
         GAME CLUB
+      </div>
+    );
+
+  if (fatal)
+    return (
+      <div className="fatal">
+        <div className="fatal__emoji">🔌</div>
+        <h1 className="fatal__title">Не удалось подключиться</h1>
+        <p className="fatal__text">{fatal}</p>
+        <button className="btn btn--secondary" onClick={() => location.reload()}>
+          Попробовать снова
+        </button>
       </div>
     );
 
