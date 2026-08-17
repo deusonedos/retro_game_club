@@ -121,10 +121,16 @@ async function rpc<T>(
 async function errorText(res: Response): Promise<string> {
   const body = await res.json().catch(() => null);
   const msg = body?.message ?? body?.error ?? body?.hint;
-  // Код 42501 приходит от Postgres и означает нехватку прав, а не плохую
-  // подпись — Supabase отдаёт его тоже под статусом 401, и без этой
-  // подсказки две совершенно разные поломки выглядят одинаково.
-  if (body?.code === '42501') return `нет прав на вызов (${msg ?? '42501'})`;
+
+  // Supabase отдаёт под статусом 401 две совершенно разные поломки. Без
+  // расшифровки они выглядят одинаково, а чинятся в разных местах.
+  if (body?.code === 'PGRST301') {
+    return 'Подпись токена не принята базой: APP_JWT_SECRET не совпадает с JWT-секретом проекта. Проверьте значение в переменных Edge Functions.';
+  }
+  if (body?.code === '42501') {
+    return `Токен принят, но нет прав на вызов: ${msg ?? '42501'}`;
+  }
+
   return msg ?? `ошибка ${res.status}`;
 }
 
