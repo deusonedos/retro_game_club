@@ -27,6 +27,8 @@ export function GameScreen({ gameId, onExit }: Props) {
   const [level, setLevel] = useState(1);
   const [attempts, setAttempts] = useState<AttemptState | null>(null);
   const [result, setResult] = useState<RoundResult | null>(null);
+  /** Счёт не дошёл до сервера. Игрок обязан это увидеть. */
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   /** Одна попытка = один раунд. Списываем до старта, а не после. */
   const startRound = useCallback(async () => {
@@ -34,6 +36,7 @@ export function GameScreen({ gameId, onExit }: Props) {
     consuming.current = true;
     setPhase('loading');
     setResult(null);
+    setSubmitError(null);
     setScore(0);
     setLevel(1);
     try {
@@ -62,7 +65,14 @@ export function GameScreen({ gameId, onExit }: Props) {
       onLevel: setLevel,
       onGameOver: async (final) => {
         setPhase('finished');
-        setResult(await api.submitScore(gameId, final));
+        setScore(final);
+        try {
+          setResult(await api.submitScore(gameId, final));
+        } catch (e) {
+          // Раньше исключение здесь оставляло result пустым, и вместо итога
+          // раунда игрок видел пустой экран.
+          setSubmitError(e instanceof Error ? e.message : String(e));
+        }
       },
     });
     handleRef.current = handle;
@@ -124,6 +134,20 @@ export function GameScreen({ gameId, onExit }: Props) {
               </button>
               <button className="btn btn--ghost" onClick={onExit}>
                 К ИГРАМ
+              </button>
+            </div>
+          </div>
+        )}
+
+        {phase === 'finished' && submitError && (
+          <div className="overlay">
+            <div className="overlay__emoji">📡</div>
+            <h2 className="overlay__title">Счёт не сохранён</h2>
+            <div className="overlay__bignum">{formatScore(score)}</div>
+            <p className="overlay__text overlay__text--warn">{submitError}</p>
+            <div className="overlay__actions">
+              <button className="btn btn--ghost" onClick={onExit}>
+                К играм
               </button>
             </div>
           </div>

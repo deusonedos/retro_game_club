@@ -148,8 +148,36 @@ interface StartRoundResponse {
 /**
  * roundId живёт здесь, а не в React-состоянии: экран не должен иметь
  * возможности отправить счёт для чужого или уже закрытого раунда.
+ *
+ * Хранится в sessionStorage, а не только в памяти: Telegram может выгрузить
+ * и перезагрузить WebView посреди игры, и тогда идентификатор раунда терялся
+ * бы вместе с уже списанной попыткой — счёт отправить стало бы некуда.
  */
-const activeRounds = new Map<string, string>();
+const ROUND_KEY = 'rgc.round.';
+
+const roundStore = {
+  get(gameId: string): string | null {
+    try {
+      return sessionStorage.getItem(ROUND_KEY + gameId);
+    } catch {
+      return null;
+    }
+  },
+  set(gameId: string, roundId: string): void {
+    try {
+      sessionStorage.setItem(ROUND_KEY + gameId, roundId);
+    } catch {
+      /* приватный режим — обойдёмся без восстановления после перезагрузки */
+    }
+  },
+  clear(gameId: string): void {
+    try {
+      sessionStorage.removeItem(ROUND_KEY + gameId);
+    } catch {
+      /* см. выше */
+    }
+  },
+};
 
 export const supabaseClient: ApiClient = {
   async touchSession() {
@@ -173,10 +201,10 @@ export const supabaseClient: ApiClient = {
   async consumeAttempt(gameId) {
     const res = await rpc<StartRoundResponse>('start_round', { p_game_id: gameId });
     if (!res.ok) {
-      activeRounds.delete(gameId);
+      roundStore.clear(gameId);
       return null;
     }
-    activeRounds.set(gameId, res.roundId!);
+    roundStore.set(gameId, res.roundId!);
     return {
       gameId,
       remaining: res.remaining,
@@ -186,10 +214,15 @@ export const supabaseClient: ApiClient = {
   },
 
   async submitScore(gameId, score) {
-    const roundId = activeRounds.get(gameId);
-    if (!roundId) throw new ApiError('раунд не начат', 400);
-    activeRounds.delete(gameId);
-    return rpc<RoundResult>('finish_round', { p_round_id: roundId, p_score: score });
+    const roundId = roundStore.get(gameId);
+    if (!roundId) throw new ApiError('раунд не начат — счёт отправить некуда', 400);
+    // Чистим только после успеха: если отправка упала, будет что повторить.
+    const result = await rpc<RoundResult>('finish_round', {
+      p_round_id: roundId,
+      p_score: score,
+    });
+    roundStore.clear(gameId);
+    return result;
   },
 
   getLeaderboard(gameId) {
