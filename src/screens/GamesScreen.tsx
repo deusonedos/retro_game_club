@@ -6,6 +6,13 @@ import { useAppState } from '../state/AppState';
 import { haptic } from '../telegram/webapp';
 import { formatCountdown } from '../utils/format';
 
+/** Обложки карточек. Слоты «Скоро» и незнакомые id получают часы. */
+const GAME_ART: Record<string, string> = {
+  'neon-tower': '🏗️',
+  'bubble-blast': '🫧',
+  'neon-drive': '🏎️',
+};
+
 interface Props {
   onOpenGame(gameId: string): void;
 }
@@ -50,7 +57,7 @@ export function GamesScreen({ onOpenGame }: Props) {
               }}
             >
               <div className="card__art" aria-hidden>
-                {soon ? '⏳' : game.id === 'neon-tower' ? '🏗️' : '🫧'}
+                {GAME_ART[game.id] ?? '⏳'}
               </div>
               <div className="card__title">{game.title.toUpperCase()}</div>
               <div className="card__tagline">{game.tagline}</div>

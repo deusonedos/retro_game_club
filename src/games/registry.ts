@@ -1,4 +1,5 @@
 import { createBubbleBlast } from './bubble-blast/engine';
+import { createNeonDrive } from './neon-drive/engine';
 import { createNeonTower } from './neon-tower/engine';
 import type { GameDefinition } from './types';
 
@@ -32,12 +33,14 @@ export const GAMES: GameDefinition[] = [
     mount: createBubbleBlast,
   },
   {
-    id: 'slot-3',
-    title: 'Soon',
-    tagline: 'Игра №3 в разработке',
-    accent: '#b98cff',
-    accentGlow: 'rgba(185,140,255,0.6)',
-    status: 'soon',
+    id: 'neon-drive',
+    title: 'Neon Drive',
+    tagline: 'Веди пальцем. Разъезд в притирку — бонус',
+    accent: '#ff2e88',
+    accentGlow: 'rgba(255,46,136,0.6)',
+    levelLabel: 'В притирку',
+    status: 'live',
+    mount: createNeonDrive,
   },
 ];
 
