@@ -50,7 +50,7 @@ export function GamesScreen({ onOpenGame }: Props) {
               }}
             >
               <div className="card__art" aria-hidden>
-                {soon ? '⏳' : '🫧'}
+                {soon ? '⏳' : game.id === 'neon-tower' ? '🏗️' : '🫧'}
               </div>
               <div className="card__title">{game.title.toUpperCase()}</div>
               <div className="card__tagline">{game.tagline}</div>

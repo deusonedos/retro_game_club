@@ -26,6 +26,8 @@ export interface GameDefinition {
   accent: string;
   /** Тот же цвет в rgba для свечений (text-shadow / box-shadow). */
   accentGlow: string;
+  /** Подпись второго счётчика в шапке: у шариков волна, у башни этаж. */
+  levelLabel?: string;
   status: GameStatus;
   mount?(canvas: HTMLCanvasElement, hooks: GameHooks): GameHandle;
 }

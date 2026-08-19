@@ -102,7 +102,7 @@ export function GameScreen({ gameId, onExit }: Props) {
           <div className="value">{formatScore(score)}</div>
         </div>
         <div className="game__stat">
-          <div className="label">Волна</div>
+          <div className="label">{game.levelLabel ?? 'Волна'}</div>
           <div className="value">{level}</div>
         </div>
         <div className="game__stat game__stat--attempts">

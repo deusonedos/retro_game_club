@@ -1,4 +1,5 @@
 import { createBubbleBlast } from './bubble-blast/engine';
+import { createNeonTower } from './neon-tower/engine';
 import type { GameDefinition } from './types';
 
 /**
@@ -11,21 +12,24 @@ import type { GameDefinition } from './types';
  */
 export const GAMES: GameDefinition[] = [
   {
+    id: 'neon-tower',
+    title: 'Neon Tower',
+    tagline: 'Тап кладёт блок. Промах режет',
+    accent: '#9dff5c',
+    accentGlow: 'rgba(157,255,92,0.6)',
+    levelLabel: 'Этаж',
+    status: 'live',
+    mount: createNeonTower,
+  },
+  {
     id: 'bubble-blast',
     title: 'Bubble Blast',
     tagline: 'Собирай тройки, сноси стену',
     accent: '#28e0ff',
     accentGlow: 'rgba(40,224,255,0.6)',
+    levelLabel: 'Волна',
     status: 'live',
     mount: createBubbleBlast,
-  },
-  {
-    id: 'slot-2',
-    title: 'Soon',
-    tagline: 'Игра №2 в разработке',
-    accent: '#9dff5c',
-    accentGlow: 'rgba(157,255,92,0.6)',
-    status: 'soon',
   },
   {
     id: 'slot-3',
